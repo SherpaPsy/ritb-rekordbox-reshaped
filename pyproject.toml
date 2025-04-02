@@ -1,5 +1,5 @@
 [project]
-name = "ritb-rekordbox-to-access"
+name = "ritb-rekordbox-reshaped"
 version = "0.1.0"
 description = ""
 authors = [
@@ -16,7 +16,7 @@ dependencies = [
 [tool.poetry]
 name = "ritb-rekordbox-reshaped"
 version = "0.1.0"
-description = "Parse Rekordbox DB and populate an MS Access database"
+description = "Parse Rekordbox DB"
 authors = ["Your Name <your@email.com>"]
 package-mode = false  # Disable package mode (we're not building a distributable package)
 

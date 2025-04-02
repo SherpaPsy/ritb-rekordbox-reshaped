@@ -1,11 +1,11 @@
-# 🎶 Rekordbox to Access
+# 🎶 RITB Rekordbox Reshaped
 
 A Python-based tool to parse your AlphaTheta Rekordbox database and populate an organized Microsoft Access database of your DJ sets, tracks, artists, and labels.
 
 ## ✨ Features
 - Easy-to-use **CustomTkinter GUI** setup.
 - Automatically pulls your Rekordbox track data.
-- Creates a structured Access database with tables for:
+- Creates a structured sqlite database with tables for:
   - Sets
   - Tracks
   - Artists
