@@ -1,0 +1,27 @@
+[project]
+name = "ritb-rekordbox-to-access"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "SherpaPsy",email = "sherpapsy@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "customtkinter (>=5.2.2,<6.0.0)",
+    "pillow (>=11.1.0,<12.0.0)",
+    "ctkmessagebox (>=2.7,<3.0)"
+]
+
+[tool.poetry]
+name = "ritb-rekordbox-reshaped"
+version = "0.1.0"
+description = "Parse Rekordbox DB and populate an MS Access database"
+authors = ["Your Name <your@email.com>"]
+package-mode = false  # Disable package mode (we're not building a distributable package)
+
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
