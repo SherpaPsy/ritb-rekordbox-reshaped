@@ -4,40 +4,29 @@ import customtkinter as ctk
 from tkinter import filedialog
 from PIL import Image
 from CTkMessagebox import CTkMessagebox
+from core.config import CONFIG_DIR, CONFIG_FILE, load_config, save_config
+from core.rekordbox_reader import auto_detect_rekordbox_db, is_valid_rekordbox_db
 
-CONFIG_DIR = os.path.join(os.path.dirname(__file__), "secrets")
-CONFIG_FILE = os.path.join(CONFIG_DIR, "config.json")
-DEFAULT_DB_PATH = os.path.join(os.environ.get("APPDATA", ""), "Pioneer", "rekordbox", "master.db")
-
-
-def load_existing_config():
-    if os.path.exists(CONFIG_FILE):
-        with open(CONFIG_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-
-def is_valid_rekordbox_db(path):
-    return path and os.path.isfile(path)
-
-
-def auto_detect_rekordbox_db():
-    return DEFAULT_DB_PATH if os.path.isfile(DEFAULT_DB_PATH) else ""
 
 
 class DJSetupApp(ctk.CTk):
     def __init__(self):
         super().__init__()
-
+        print("DJSetupApp __init__ starting")
         self.title("Rekordbox Reshaped Setup")
         self.geometry("600x500")
 
-        self.config = load_existing_config()
+        self.config = load_config()
+        print (f"Loaded config: {self.config}")
 
         # Check Rekordbox DB path validity
         rek_path = self.config.get("rekordbox_db_path", "")
+        print (f"Loaded Rekordbox DB path from config: {rek_path}")
         if not is_valid_rekordbox_db(rek_path):
+            print (f"Invalid Rekordbox DB path: {rek_path}")
+            print("Attempting auto-detection...")
             auto_path = auto_detect_rekordbox_db()
+            print (f"Auto-detected Rekordbox DB path: {auto_path}")
             if auto_path:
                 self.config["rekordbox_db_path"] = auto_path
             else:
