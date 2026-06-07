@@ -171,3 +171,26 @@ def extract(sqlite_db_path, rekordbox_db_path=None):
         rb.session.close()
 
     return {"unresolved_labels": unresolved_labels, "review_titles": review_titles}
+
+
+def write_review_report(report, path):
+    """Write the actionable review_titles list to a plain-text file.
+
+    These are the tracks worth fixing at the source (in Rekordbox, since that's
+    what this extractor reads from) - malformed [Label Year] tags, brackets that
+    read as credits rather than labels, etc. Each line includes the Rekordbox
+    track ID so the track can be found again via search.
+    """
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(f"Titles to review in Rekordbox ({len(report['review_titles'])})\n")
+        f.write("=" * 60 + "\n\n")
+        for rb_id, title, reason in report["review_titles"]:
+            f.write(f"[{rb_id}] {title}\n")
+            f.write(f"    reason: {reason}\n\n")
+
+        f.write("\n")
+        f.write(f"Tracks with no resolvable label ({len(report['unresolved_labels'])})\n")
+        f.write("=" * 60 + "\n")
+        f.write("Not included in detail - too many to fix by hand. This is the\n")
+        f.write("candidate list for a future external label-lookup feature.\n")
