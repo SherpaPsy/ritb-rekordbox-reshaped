@@ -34,13 +34,22 @@ CREATE TABLE Tracks (
   id INTEGER PRIMARY KEY,
   track_title TEXT NOT NULL,
   version TEXT,
-  label TEXT NOT NULL,
-  artist TEXT NOT NULL,
+  label_id INTEGER,
   album_name TEXT,
   date DATE,
   tempo REAL,
   key TEXT,
-  genre TEXT
+  genre TEXT,
+  FOREIGN KEY (label_id) REFERENCES Labels(id)
+);
+
+CREATE TABLE Track_Artists (
+  track_id INTEGER NOT NULL,
+  artist_id INTEGER NOT NULL,
+  role TEXT NOT NULL DEFAULT 'artist',
+  PRIMARY KEY (track_id, artist_id, role),
+  FOREIGN KEY (track_id) REFERENCES Tracks(id),
+  FOREIGN KEY (artist_id) REFERENCES Artists(id)
 );
 
 CREATE TABLE Set_Tracks (
@@ -51,3 +60,9 @@ CREATE TABLE Set_Tracks (
   FOREIGN KEY (set_id) REFERENCES Sets(id),
   FOREIGN KEY (track_id) REFERENCES Tracks(id)
 );
+
+-- Reverse-FK lookups not covered by the primary keys above
+CREATE INDEX idx_label_owners_artist ON LabelOwners(artist_id);
+CREATE INDEX idx_tracks_label ON Tracks(label_id);
+CREATE INDEX idx_track_artists_artist ON Track_Artists(artist_id);
+CREATE INDEX idx_set_tracks_track ON Set_Tracks(track_id);
