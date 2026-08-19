@@ -1,3 +1,4 @@
+import datetime
 import os
 import re
 import sqlite3
@@ -6,6 +7,12 @@ from pyrekordbox import Rekordbox6Database
 from pyrekordbox.db6.tables import DjmdSongPlaylist
 
 SCHEMA_PATH = os.path.join(os.path.dirname(__file__), "..", "sql", "schema.sql")
+
+# Matches a leading "yyyy.mm.dd", "yyyy-mm-dd" or "yyyy/mm/dd" at the start of a
+# playlist name, e.g. "2019.11.09.Playlist" or "2018.12.28". Most of your DJ set
+# playlists are named this way. Requires a word boundary before the year so it
+# doesn't pick up junk like "2112.99.99 Put It In A Mix 2020".
+PLAYLIST_DATE_PATTERN = re.compile(r"\b(20\d{2})[.\-/](\d{2})[.\-/](\d{2})\b")
 
 # Matches a single, non-nested trailing "[Label]" or "[Label Year]" tag, e.g.
 # "Forgiven [Future Avenue]" or "Utopia (Original Mix) [All Day I Dream 2023]".
@@ -35,6 +42,23 @@ def parse_title(title):
         return title, None, bracket_text
 
     return title[:match.start()].rstrip(), bracket_text, None
+
+
+def parse_playlist_date(name):
+    """Pull a "yyyy.mm.dd"-style date out of a playlist name, e.g.
+    "2019.11.09.Playlist" or "2018.12.28 Frozen Fog" -> "2019-11-09".
+
+    Returns an ISO date string, or None if the name doesn't start with a date
+    or the numbers don't form a real calendar date (e.g. "2112.99.99").
+    """
+    match = PLAYLIST_DATE_PATTERN.search(name or "")
+    if not match:
+        return None
+    year, month, day = (int(g) for g in match.groups())
+    try:
+        return datetime.date(year, month, day).isoformat()
+    except ValueError:
+        return None
 
 
 def init_schema(conn):
@@ -114,10 +138,16 @@ def import_track(conn, caches, content, unresolved_labels, review_titles):
     return track_id
 
 
-def extract(sqlite_db_path, rekordbox_db_path=None):
+def extract(sqlite_db_path, rekordbox_db_path=None, since_year=None):
     """Walk Rekordbox playlists and populate a fresh SQLite db using sql/schema.sql.
 
     Only tracks that appear in at least one (non-folder) playlist are imported.
+    Each set's date is parsed from its playlist name (see parse_playlist_date);
+    playlists that don't start with a "yyyy.mm.dd" date get a NULL Sets.date.
+
+    since_year, if given, restricts import to playlists whose parsed date falls
+    in or after that calendar year. Playlists with no parseable date are
+    skipped in that case, since there's no way to know they're in range.
 
     Returns a dict with two review lists:
       - "unresolved_labels": (rekordbox_track_id, title) where no label could be
@@ -143,6 +173,11 @@ def extract(sqlite_db_path, rekordbox_db_path=None):
             if playlist.is_folder:
                 continue
 
+            set_date = parse_playlist_date(playlist.Name)
+            if since_year is not None:
+                if set_date is None or int(set_date[:4]) < since_year:
+                    continue
+
             songs = (
                 rb.session.query(DjmdSongPlaylist)
                 .filter_by(PlaylistID=playlist.ID)
@@ -153,7 +188,7 @@ def extract(sqlite_db_path, rekordbox_db_path=None):
                 continue
 
             set_id = conn.execute(
-                "INSERT INTO Sets (title, date) VALUES (?, ?)", (playlist.Name, None)
+                "INSERT INTO Sets (title, date) VALUES (?, ?)", (playlist.Name, set_date)
             ).lastrowid
 
             for song in songs:
